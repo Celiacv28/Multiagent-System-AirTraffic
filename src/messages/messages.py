@@ -25,8 +25,8 @@ class Message_Respond(BaseModel):
     time: int
 
 
-class PlaneInfo(BaseModel):
-    plane_id: str
+class AircraftInfo(BaseModel):
+    aircraft_id: str
     wait_time: int
     t_takeoff: int
     t_landing: int
@@ -36,8 +36,7 @@ class Message_Tick(BaseModel):
     time: int
 
 
-class MetricsReport(BaseModel):
-    agent_type: str
+class MetricsReport(BaseModel):    
     agent_id: str
     data: dict
 
