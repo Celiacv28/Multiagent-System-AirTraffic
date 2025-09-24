@@ -12,41 +12,42 @@ from messages.messages import Message_Request
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 
-TOTAL_MINUTES = 50
+TOTAL_MINUTES = 300
 
-NUM_AIRPORTS = 3
+NUM_AIRPORTS = 4
 NUM_AIRCRAFT = 6
 
-MAX_RUNWAYS = 2
+MAX_RUNWAYS = 1
 
 # Tiempo mínimo entre operaciones en pista
 OPERATION_GAP_MINUTES = 3
 
 # Velocidad media de cada aeronave (celdas/min)
-AIRCRAFT_SPEEDS = [3, 3, 4, 6, 5, 5]
+AIRCRAFT_SPEEDS = [3, 4, 2, 4, 5, 6]
 
 # Tiempos medios de despegue y aterrizaje por aeronave
-TAKEOFF_TIMES = [2, 2, 3, 3, 3, 4]
-LANDING_TIMES = [2, 3, 3, 4, 3, 4]
+TAKEOFF_TIMES = [2, 2, 3, 3, 2, 4]
+LANDING_TIMES = [2, 3, 3, 4, 2, 5]
 
 # Tiempo de espera en aeropuerto antes de pedir pista
-WAIT_TIMES = [2, 3, 2, 3, 1, 2]
+WAIT_TIMES = [2, 3, 2, 3, 4, 1]
 # Aprendizaje por refuerzo activado/desactivado
-USE_RL = True
+USE_RL = False
 
 
 AIRPORTS = [
-    {"id": "MAD", "x": 0, "y": 0, "num_runways": 2},
-    {"id": "BCN", "x": 10, "y": 10, "num_runways": 2},
-    {"id": "SEV", "x": 5, "y": 15, "num_runways": 2},
+    {"id": "MAD", "x": 0, "y": 0, "num_runways": 1},
+    {"id": "BCN", "x": 10, "y": 15, "num_runways": 2},
+    {"id": "SEV", "x": 5, "y": 20, "num_runways": 3},
+    {"id": "VLC", "x": 12, "y": 3, "num_runways": 1}
 ]
 ROUTES = [
     ("PL001", "MAD", "BCN"),
-    ("PL002", "BCN", "SEV"),
-    ("PL003", "BCN", "MAD"),
-    ("PL004", "SEV", "MAD"),
-    ("PL005", "SEV", "BCN"),
-    ("PL006", "MAD", "BCN"),
+    ("PL002", "BCN", "MAD"),
+    ("PL003", "SEV", "BCN"),
+    ("PL004", "VLC", "MAD"),
+    ("PL005", "SEV", "MAD"),
+    ("PL006", "VLC", "SEV")   
 ]
 
 async def main():
