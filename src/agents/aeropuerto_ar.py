@@ -122,27 +122,63 @@ class AirportAgentAR(RoutedAgent):
                 return runway
         return None
       
-
-
-
     def _get_state(self):
         free = sum(1 for r in self.runways if r["status"] == "FREE")
-        return (free, len(self.queue))
+        
+        if not self.queue:
+            avg_wait = 0
+        else:
+            total_wait = sum(self.current_time - et for _, _, et in self.queue)
+            avg_wait = total_wait // len(self.queue)  
+        
+        return (free, len(self.queue), avg_wait)
+
+
+    
 
     def choose_action(self, state):
-        """Estrategia ε-greedy"""
+        """Estrategia ε-greedy con 2 acciones fijas"""
+        num_actions = 2  # [0: mayor espera, 1: menor duración]
+        
         if not self.queue:
             return None
+        
+        # Exploración aleatoria
         if random.random() < self.epsilon:
-            return random.randint(0, len(self.queue) - 1)
+            return random.randint(0, num_actions - 1)
+        
         q_vals = self.Q[state]
         return max(q_vals, key=q_vals.get, default=0)
+    
+
+    def _select_aircraft_from_queue(self, action):
+        """Devuelve el avión de la cola según la acción elegida"""
+        if not self.queue:
+            return None, None, None
+
+        if action == 0:  # mayor tiempo de espera
+            idx = max(range(len(self.queue)), key=lambda i: self.current_time - self.queue[i][2])
+
+        elif action == 1:  # menor duración de operación
+            idx = min(
+                range(len(self.queue)),
+                key=lambda i: self.aircrafts[self.queue[i][0]].t_takeoff
+                            if self.queue[i][1] == "takeoff"
+                            else self.aircrafts[self.queue[i][0]].t_landing
+            )
+
+        return self.queue.pop(idx)
+        
+
+
 
     def update_Q(self, state, action, reward, next_state):
         """Actualiza la Q-table"""
         old_val = self.Q[state][action]
         best_next = max(self.Q[next_state].values(), default=0)
         self.Q[state][action] = old_val + self.alpha * (reward + self.gamma * best_next - old_val)
+
+
 
     async def _process_queue(self):
         """Procesa la cola con RL"""
@@ -160,7 +196,7 @@ class AirportAgentAR(RoutedAgent):
             total_wait_time = sum(self.current_time - et for _, _, et in self.queue)
             reward = -(queue_length_penalty + 3 * total_wait_time)
 
-            aircraft_id, op_type, entry_time = self.queue.pop(action)
+            aircraft_id, op_type, entry_time = self._select_aircraft_from_queue(action)
 
             runway["status"] = "OCCUPIED"
             runway["current_aircraft"] = aircraft_id
