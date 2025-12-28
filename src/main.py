@@ -7,8 +7,7 @@ from agents.clock import ClockAgent
 from messages.messages import Message_Request
 
 
-# ================== PARÁMETROS DE SIMULACIÓN ==================
-# Tamaño de la cuadrícula
+# ================== SIMULATION PARAMETERS ==================
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 
@@ -19,19 +18,19 @@ NUM_AIRCRAFT = 6
 
 MAX_RUNWAYS = 1
 
-# Tiempo mínimo entre operaciones en pista
+# Minimum time between consecutive operations on the same runway
 OPERATION_GAP_MINUTES = 3
 
-# Velocidad media de cada aeronave (celdas/min)
+# Average speed of each aircraft (cells/min)
 AIRCRAFT_SPEEDS = [3, 4, 2, 4, 5, 6]
 
-# Tiempos medios de despegue y aterrizaje por aeronave
+# Average takeoff and landing times per aircraft
 TAKEOFF_TIMES = [2, 2, 3, 3, 2, 4]
 LANDING_TIMES = [2, 3, 3, 4, 2, 5]
 
-# Tiempo de espera en aeropuerto antes de pedir pista
+# Waiting time at airport before requesting runway
 WAIT_TIMES = [2, 3, 2, 3, 4, 1]
-# Aprendizaje por refuerzo activado/desactivado
+# Reinforcement learning enabled/disabled
 USE_RL = False
 
 

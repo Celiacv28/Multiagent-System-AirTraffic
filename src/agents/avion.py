@@ -7,7 +7,6 @@ class AircraftAgent(RoutedAgent):
     def __init__(self, aircraft_id, airport_origin, airport_destination, wait_time, takeoff_time, landing_time, speed):
         super().__init__(aircraft_id)
         
-        # Solo los datos básicos
         self.aircraft_id = aircraft_id
         self.airport_origin = airport_origin
         self.airport_destination = airport_destination
@@ -21,16 +20,13 @@ class AircraftAgent(RoutedAgent):
 
         self.initialized = False
 
-        # Estado actual
         self.state = "WAITING"
         self.assigned_runway = None
         
-        # Control de tiempo
-        self.wait_start_time = 0  # Cuándo empezó a esperar
-        self.operation_start_time = 0  # Cuándo empezó despegue/aterrizaje
-        self.flight_start_time = 0  # Cuándo empezó el vuelo
+        self.wait_start_time = 0  
+        self.operation_start_time = 0  
+        self.flight_start_time = 0  
 
-        # Métricas
         self.flight_count = 0
         self.takeoff_delays = []
         self.landing_delays = []
@@ -58,13 +54,13 @@ class AircraftAgent(RoutedAgent):
         )
         await self.send_message(msg, AgentId(self.airport_origin, "default"))
         await self.send_message(msg, AgentId(self.airport_destination, "default"))
-        print(f"[{self.aircraft_id}] Enviada info a aeropuertos")
+        print(f"[{self.aircraft_id}] Aircraft info sent to airports")
 
 
     async def step(self, current_time: int):
         if self.state == "WAITING":
             if current_time - self.wait_start_time >= self.wait_time:
-                print(f"Avión {self.aircraft_id} listo para solicitar despegue.")
+                print(f"Aircraft {self.aircraft_id} ready to request takeoff.")
 
                 msg = Message_Request(content="takeoff", sender=self.aircraft_id, time=current_time)
                 self.state = "AWAITING_TAKEOFF_AUTH"
@@ -76,31 +72,29 @@ class AircraftAgent(RoutedAgent):
             if current_time - self.operation_start_time >= self.takeoff_time:                
                 self.state = "FLYING"
                 self.flight_start_time = current_time
-                print(f"Avión {self.aircraft_id} ha despegado.")
+                print(f"Aircraft {self.aircraft_id} has taken off.")
 
                 msg = Message_Finish(sender=self.aircraft_id, runway_id=self.assigned_runway, time=current_time)
                 await self.send_message(msg, AgentId(self.airport_origin, "default"))
 
-                
         elif self.state == "LANDING":
             if current_time - self.operation_start_time >= self.landing_time:
                 self.state = "WAITING"
                 msg = Message_Finish(sender=self.aircraft_id, runway_id=self.assigned_runway, time=current_time)
                 await self.send_message(msg, AgentId(self.airport_destination, "default"))
-                
+
                 self.wait_start_time = current_time
                 self._swap_route()
-                self.flight_count += 1 
+                self.flight_count += 1
 
             
         elif self.state == "FLYING":
             if (current_time - self.flight_start_time) >= self.time_traveler:
-                print(f"Avión {self.aircraft_id} listo para aterrizar.")
+                print(f"Aircraft {self.aircraft_id} ready to land.")
                 msg = Message_Request(content="landing", sender=self.aircraft_id, time=current_time)
                 self.state = "AWAITING_LANDING_AUTH"
-                self.landing_request_time = current_time 
+                self.landing_request_time = current_time
                 await self.send_message(msg, AgentId(self.airport_destination, "default"))
-               
 
         elif self.state in ("AWAITING_TAKEOFF_AUTH", "AWAITING_LANDING_AUTH"):
             pass
@@ -109,7 +103,7 @@ class AircraftAgent(RoutedAgent):
     
 
     def _calculate_flight_time(self):
-        """Calcula tiempo de vuelo"""
+
         if self.origin_pos is None or self.destination_pos is None:
             return None
         distance = abs(self.destination_pos[0] - self.origin_pos[0]) + abs(self.destination_pos[1] - self.origin_pos[1])
@@ -119,7 +113,7 @@ class AircraftAgent(RoutedAgent):
 
     @message_handler
     async def handle_airport_position(self, message: AirportPosition, ctx: MessageContext) -> None:
-        # Guardar la posición recibida
+
         if message.airport_id == self.airport_origin:
             self.origin_pos = (message.x, message.y)
         elif message.airport_id == self.airport_destination:
@@ -127,14 +121,14 @@ class AircraftAgent(RoutedAgent):
 
         if self.origin_pos is not None and self.destination_pos is not None:
             self.time_traveler = self._calculate_flight_time()
-            print(f"[{self.aircraft_id}] Tiempo de vuelo calculado: {self.time_traveler}")
+            print(f"[{self.aircraft_id}] Flight time calculated: {self.time_traveler}")
     
 
     @message_handler
     async def handle_respond(self, message: Message_Respond, ctx: MessageContext) -> None:
 
         if message.authorized:
-            print(f"[{self.aircraft_id}] autorizado en pista {message.runway_id} t={message.time}")
+            print(f"[{self.aircraft_id}] authorized on runway {message.runway_id} t={message.time}")
             self.assigned_runway = message.runway_id
             self.operation_start_time = message.time
 
@@ -147,7 +141,7 @@ class AircraftAgent(RoutedAgent):
                     })
                     self.takeoff_request_time = None
                 self.state = "TAKING_OFF"
-                
+
             elif self.state == "AWAITING_LANDING_AUTH":
                 if self.landing_request_time is not None:
                     delay = message.time - self.landing_request_time
@@ -157,9 +151,9 @@ class AircraftAgent(RoutedAgent):
                     })
                     self.landing_request_time = None
                 self.state = "LANDING"
-                
+
         else:
-            print(f"[{self.aircraft_id}] NO autorizado, esperando...")
+            print(f"[{self.aircraft_id}] NOT authorized, waiting...")
 
     
     @message_handler

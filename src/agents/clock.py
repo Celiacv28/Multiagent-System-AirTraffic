@@ -12,16 +12,15 @@ class ClockAgent(RoutedAgent):
         self.received_reports = 0
 
     @message_handler
-    async def  start(self, message: Message_Request, ctx: MessageContext) -> None:
+    async def start(self, message: Message_Request, ctx: MessageContext) -> None:
         for t in range(self.total_minutes):
-            print(f"\n===== MINUTO {t} =====")
+            print(f"\n===== MINUTE {t} =====")
             tick_msg = Message_Tick(time=t)
             await self.publish_message(tick_msg, topic_id=DefaultTopicId())
             await asyncio.sleep(1)
-            
+
         end_msg = Message_End()
         await self.publish_message(end_msg, topic_id=DefaultTopicId())
-        
 
     @message_handler
     async def on_metrics_report(self, message: MetricsReport, ctx: MessageContext) -> None:
@@ -31,20 +30,19 @@ class ClockAgent(RoutedAgent):
             self.print_summary()
 
     def print_summary(self):
-        print("\n===== RESUMEN DE MÉTRICAS =====\n")
-        print(f"Tiempo total simulación: {self.total_minutes} minutos")
-        print(f"Número de aeropuertos: {self.num_airports}")
-        print(f"Número de aviones: {self.num_aircraft}")
-        print(f"Dimenes de la cuadrícula")
+        print("\n===== METRICS SUMMARY =====\n")
+        print(f"Total simulation time: {self.total_minutes} minutes")
+        print(f"Number of airports: {self.num_airports}")
+        print(f"Number of aircraft: {self.num_aircraft}")
+        print(f"Grid dimensions")
         print("-------------------------------\n")
         
 
-        
         airport_metrics = [m for m in self.metrics if m and 'airport_id' in m]
         num_runways = [m.get('num_runways', 0) for m in airport_metrics]
         takeoffs = [m.get('takeoffs', 0) for m in airport_metrics]
         landings = [m.get('landings', 0) for m in airport_metrics]
-        aircraft_metrics = [m for m in self.metrics if m and 'aircraft_id' in m]       
+        aircraft_metrics = [m for m in self.metrics if m and 'aircraft_id' in m]
 
         takeoff_delays = []
         landing_delays = []
@@ -63,30 +61,30 @@ class ClockAgent(RoutedAgent):
         t_max, t_min, t_avg = stats(takeoff_delays)
         l_max, l_min, l_avg = stats(landing_delays)
 
-        print("--- Estadísticas ---")
+        print("--- Statistics ---")
         max_r, min_r, mean_r = stats(num_runways)
         max_t, min_t, mean_t = stats(takeoffs)
         max_l, min_l, mean_l = stats(landings)
         t_max, t_min, t_avg = stats(takeoff_delays)
         l_max, l_min, l_avg = stats(landing_delays)
 
-        print("Máximo, mínimo y valor medio de pistas de aeropuertos:")
-        print(f"  Máx: {max_r}  Mín: {min_r}  Media: {mean_r:.2f}" if max_r is not None else "  Sin datos")
-        print("Máximo, mínimo y valor medio de despegues:")
-        print(f"  Máx: {max_t}  Mín: {min_t}  Media: {mean_t:.2f}" if max_t is not None else "  Sin datos")
-        print("Máximo, mínimo y valor medio de aterrizajes:")
-        print(f"  Máx: {max_l}  Mín: {min_l}  Media: {mean_l:.2f}" if max_l is not None else "  Sin datos")
-        print("Máximo, mínimo y valor medio de retrasos en despegues:")
-        print(f"  Máx: {t_max}  Mín: {t_min}  Media: {t_avg:.2f}" if t_max is not None else "  Sin datos")
-        print("Máximo, mínimo y valor medio de retrasos en aterrizajes:")
-        print(f"  Máx: {l_max}  Mín: {l_min}  Media: {l_avg:.2f}" if l_max is not None else "  Sin datos")
+        print("Max, min and mean number of airport runways:")
+        print(f"  Max: {max_r}  Min: {min_r}  Mean: {mean_r:.2f}" if max_r is not None else "  No data")
+        print("Max, min and mean number of takeoffs:")
+        print(f"  Max: {max_t}  Min: {min_t}  Mean: {mean_t:.2f}" if max_t is not None else "  No data")
+        print("Max, min and mean number of landings:")
+        print(f"  Max: {max_l}  Min: {min_l}  Mean: {mean_l:.2f}" if max_l is not None else "  No data")
+        print("Max, min and mean takeoff delays:")
+        print(f"  Max: {t_max}  Min: {t_min}  Mean: {t_avg:.2f}" if t_max is not None else "  No data")
+        print("Max, min and mean landing delays:")
+        print(f"  Max: {l_max}  Min: {l_min}  Mean: {l_avg:.2f}" if l_max is not None else "  No data")
         print("-------------------------------\n")
 
         for i, m in enumerate(self.metrics):
             if not m:
-                print(f"Agente {i+1}: Sin datos de métricas.")
+                print(f"Agent {i+1}: No metrics data.")
                 continue
-            print(f"Agente {i+1}:")
+            print(f"Agent {i+1}:")
             for k, v in m.items():
                 print(f"  {k}: {v}")
             print()
