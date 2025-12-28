@@ -22,7 +22,6 @@ class AirportAgent(RoutedAgent):
         self.takeoffs = 0
         self.landings = 0
 
-        # Estado dinámico de las pistas
         self.runways = []
         for i in range(num_runways):
             self.runways.append({
@@ -35,11 +34,10 @@ class AirportAgent(RoutedAgent):
     @message_handler
     async def on_tick(self, message: Message_Tick, ctx: MessageContext) -> None:
         self.current_time = message.time
-        await self._process_queue()  
+        await self._process_queue()
 
     @message_handler
     async def handle_info(self, message: AircraftInfo, ctx: MessageContext) -> None:
-        """Registra información del avión y responde con la posición del aeropuerto"""
 
         self.aircrafts[message.aircraft_id] = message
         pos_msg = AirportPosition(airport_id=self.airport_id, x=self.x, y=self.y)
@@ -50,7 +48,7 @@ class AirportAgent(RoutedAgent):
 
     @message_handler
     async def handle_request(self, message: Message_Request, ctx: MessageContext) -> None:
-        """Procesa solicitudes de aviones"""
+
         op_type = message.content
         sender = message.sender
         time = message.time
@@ -75,7 +73,7 @@ class AirportAgent(RoutedAgent):
             if not any(item[0] == sender for item in self.queue):
 
                 self.queue.append((sender, op_type, time))
-                print(f"[{self.airport_id}] Cola: {sender} esperando para {op_type} desde t={time}")
+                print(f"[{self.airport_id}] Queue: {sender} waiting for {op_type} since t={time}")
 
             await self.send_message(Message_Respond(authorized=False, runway_id=None, time=time), AgentId(sender, "default"))
 
@@ -84,7 +82,7 @@ class AirportAgent(RoutedAgent):
 
     @message_handler
     async def handle_finish(self, message: Message_Finish, ctx: MessageContext) -> None:
-        """Procesa confirmaciones de finalización de operaciones"""
+
         runway_id = message.runway_id
         time = message.time
 
@@ -108,7 +106,7 @@ class AirportAgent(RoutedAgent):
         )              
 
     def _get_available_runway(self, current_time):
-        """Encuentra pista libre que respete el tiempo mínimo"""
+
         for runway in self.runways:
             if (runway["status"] == "FREE" and 
                 current_time - runway["last_operation_time"] >= self.operation_gap_minutes):
@@ -119,12 +117,11 @@ class AirportAgent(RoutedAgent):
 
 
     async def _process_queue(self):
-        """Procesa la cola de espera si hay pistas libres"""
+
         while self.queue:
             runway = self._get_available_runway(self.current_time)
             if not runway:
-                break  # No hay pistas libres
-
+                break 
             best_idx = 0
             best_score = float('inf')
 
@@ -135,8 +132,8 @@ class AirportAgent(RoutedAgent):
 
                 score = duration / (wait_time + 1)
 
-                if wait_time > 8:  # Después de 8 minutos penalizar más
-                    score = score * 0.5  # Reduce el score 
+                if wait_time > 8:  # After 8 minutes penalize more
+                    score = score * 0.5  # Reduce score 
                 
                 if score < best_score:
                     best_score = score
